@@ -1,4 +1,4 @@
-import learningfunctions
+from learningfunctions.launcher import Launcher
 
-launcher = learningfunctions.Launcher()
+launcher = Launcher()
 launcher.launch()

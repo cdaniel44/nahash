@@ -2,7 +2,9 @@
 
 class Launcher:
     def __init__(self):
+        print('Init')
         #init Self params
+
 
     def launch():
         #TODO All the entry point
@@ -49,4 +51,4 @@ class Launcher:
 	######################################
 	###    	fonction d evaluation      ###
 	######################################
-	
+

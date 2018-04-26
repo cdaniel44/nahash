@@ -2,4 +2,7 @@
 
 class Launcher:
     def __init__(self):
-        
+        #init Self params
+
+    def launch():
+        #TODO All the entry point

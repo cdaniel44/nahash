@@ -1,4 +1,4 @@
 import learningfunctions
 
 launcher = learningfunctions.Launcher()
-launcher.main()
+launcher.launch()

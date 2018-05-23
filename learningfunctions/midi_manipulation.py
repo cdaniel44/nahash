@@ -6,7 +6,6 @@ lowerBound = 24
 upperBound = 102
 span = upperBound-lowerBound
 
-
 def midiToNoteStateMatrix(midifile, squash=True, span=span):
     pattern = midi.read_midifile(midifile)
 
@@ -67,6 +66,7 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span):
     S = np.array(statematrix)
     statematrix = np.hstack((S[:, :, 0], S[:, :, 1]))
     statematrix = np.asarray(statematrix).tolist()
+    print(statematrix)
     return statematrix
 
 def noteStateMatrixToMidi(statematrix, name="example", span=span):

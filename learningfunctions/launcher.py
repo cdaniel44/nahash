@@ -53,7 +53,7 @@ class Launcher:
         note_range = highest_note - lowest_note  # the note range
         num_steps = 15
         truncated_backprop_length = 15  # This is the number of timesteps that we will create at a time
-        num_inputs = 2 * note_range * truncated_backprop_length  # This is the size of the visible layer.
+        n_inputs = 2 * note_range * truncated_backprop_length  # This is the size of the visible layer.
         num_neurons = 150  # This is the size of the hidden layer
         num_outputs = 10
 
@@ -62,6 +62,7 @@ class Launcher:
         batch_size = 10  # The number of training examples that we are going to send through the RNN at a time.
         state_size = 4
         num_classes = 2
+        songs = import_midi.get_songs("../musics/")
         num_batches = len(songs) // batch_size
         learning_rate = tf.constant(0.005, tf.float32)  # The learning rate of our model
         
@@ -70,7 +71,6 @@ class Launcher:
 	###          songs                 ###
 	######################################
         def generate_songs():
-            songs = import_midi.get_songs("../musics/")
             songs = np.array(songs)
             for x in songs:
             
@@ -177,7 +177,7 @@ class Launcher:
 	######################################
 	
 
-        with.tf.Session() as sess:
+        with tf.Session() as sess:
             sess.run(tf.initialize_all_variables())
             plt.ion()
             plt.figure()

@@ -97,13 +97,18 @@ class Launcher:
 	###    	        Run                ###
 	######################################
 	
-        init = tf.global_variables_initializer()
 
         with.tf.Session() as sess:
-            init.run()
-            for epoch in range(n_epochs):
+            init = tf.global_variables_initializer()
+            sess.run(init)
+            for epoch in tqdm(range(n_epochs)):
                 for iteration in range(n_batches):
-                    x_batch, y_batch =
+                    songs = np.array(songs)
+                    song = song[:int(np.floor(song.shape[0] // n_steps) * n_steps)]
+                    song = np.reshape(song, [song.shape[0] // n_steps, song.shape[1] * n_steps])
+                    for i in range(1, len(song), batch_size):
+                        tr_x = song[i:i + batch_size]
+                        sess.run(updt, feed_dict={x: tr_x})
 
     
     

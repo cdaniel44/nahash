@@ -71,13 +71,13 @@ class Launcher:
 	######################################
         def generate_songs():
             songs = import_midi.get_songs("../musics/")
-        
+            songs = np.array(songs)
             for x in songs:
             
                 y = np.roll(songs, 3)
                 y[0:3] = 0
             
-            x = x.reshape((batch_size, -1))
+            x = songs.reshape((batch_size, -1))
             y = y.reshape((batch_size, -1))
             
             return (x, y)
@@ -139,7 +139,7 @@ class Launcher:
 	###   fonction d optimisation           ###
 	###########################################
 	
-        train_step = tf.train.AdagradOptimizer(0.3).minimize(total_loss)
+        #train_step = tf.train.AdagradOptimizer(0.3).minimize(total_loss)
 
 
 	###########################################
@@ -185,20 +185,32 @@ class Launcher:
             loss_list = []
             
             for epoch_idx in tqdm(range(num_epochs)):
-                for iteration in range(n_batches):
+                x,y = generate_songs()
+                _current_state = np.zeros((batch_size, state_size))
                 
+                print("New song, epoch :", epoch_idx)
+                for batch_idx in range(num_batches):
+                    start_idx = batch_idx * truncated_backprop_length
+                    end_idx = start_idx + truncated_backprop_length
+                    
+                    batchX = x[:,start_idx:end_idx]
+                    batchY = y[:,start_idx:end_idx]
+                    
+                    _total_loss, _train_step, _current_state, _predictions_series = sess.run(
+                [total_loss, train_step, current_state, predictions_series],
+                feed_dict={
+                    batchX_placeholder:batchX,
+                    batchY_placeholder:batchY,
+                    init_state:_current_state
+                })
                 
-                
-                    songs = np.array(songs)
-                    song = song[:int(np.floor(song.shape[0] // n_steps) * n_steps)]
-                    song = np.reshape(song, [song.shape[0] // n_steps, song.shape[1] * n_steps])
-                    for i in range(1, len(song), batch_size):
-                        tr_x = song[i:i + batch_size]
-                        sess.run(updt, feed_dict={x: tr_x})
-
-    
-    
-
+                    loss_list.append(_total_loss)
+                    
+                    if batch_idx%100 == 0:
+                        print("Step",batch_idx, "Loss", _total_loss)
+                        plot(loss_list, _predictions_series, batchX, batchY)
+        plt.ioff()
+        plt.show()
 
     
     if __name__ == "__main__":

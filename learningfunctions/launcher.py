@@ -41,16 +41,10 @@ class Launcher:
     def launch():
         #TODO All the entry point
         
+
+        
+
     ######################################
-	###          songs                 ###
-	######################################
-
-        songs = import_midi.get_songs("../musics/")
-        
-        x_test = songs ##################################################################### a redimensionner
-        
-
-        ######################################
 	###    Hypermarameters             ###
 	######################################
 	
@@ -70,6 +64,24 @@ class Launcher:
         num_classes = 2
         num_batches = len(songs) // batch_size
         learning_rate = tf.constant(0.005, tf.float32)  # The learning rate of our model
+        
+        
+    ######################################
+	###          songs                 ###
+	######################################
+        def generate_songs():
+            songs = import_midi.get_songs("../musics/")
+        
+            for x in songs:
+            
+                y = np.roll(songs, 3)
+                y[0:3] = 0
+            
+            x = x.reshape((batch_size, -1))
+            y = y.reshape((batch_size, -1))
+            
+            return (x, y)
+        
         
     ######################################
 	###    	variables                  ###
@@ -174,6 +186,9 @@ class Launcher:
             
             for epoch_idx in tqdm(range(num_epochs)):
                 for iteration in range(n_batches):
+                
+                
+                
                     songs = np.array(songs)
                     song = song[:int(np.floor(song.shape[0] // n_steps) * n_steps)]
                     song = np.reshape(song, [song.shape[0] // n_steps, song.shape[1] * n_steps])

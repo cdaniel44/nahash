@@ -10,7 +10,7 @@ from tqdm import tqdm
 lowest_note = midi_manipulation.lowerBound
 highest_note = midi_manipulation.upperBound
 note_range = highest_note-lowest_note
-path = "../musics"
+path = "../tmp"
 
 lowerBound = 24
 upperBound = 102

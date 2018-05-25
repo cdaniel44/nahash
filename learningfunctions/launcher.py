@@ -42,7 +42,6 @@ class Launcher:
         #TODO All the entry point
         
 
-        
 
     ######################################
 	###    Hypermarameters             ###
@@ -62,7 +61,7 @@ class Launcher:
         batch_size = 10  # The number of training examples that we are going to send through the RNN at a time.
         state_size = 4
         num_classes = 2
-        songs = import_midi.get_songs("../musics/")
+        songs = import_midi.get_songs("../tmp/")
         num_batches = len(songs) // batch_size
         learning_rate = tf.constant(0.005, tf.float32)  # The learning rate of our model
         
@@ -70,14 +69,16 @@ class Launcher:
     ######################################
 	###          songs                 ###
 	######################################
-        def generate_songs():
-            songs = np.array(songs)
+        def generate_songs(music):
+
             for x in songs:
-            
-                y = np.roll(songs, 3)
+                
+                x = np.array(x)
+                print(x)
+                y = np.roll(x, 3)
                 y[0:3] = 0
             
-            x = songs.reshape((batch_size, -1))
+            x = x.reshape((batch_size, -1))
             y = y.reshape((batch_size, -1))
             
             return (x, y)
@@ -90,8 +91,8 @@ class Launcher:
 
         
         #placeholder that holds data inputs 
-        x = tf.placeholder(tf.float32, [None, truncated_backprop_length, n_inputs])
-        y = tf.placeholder(tf.int32, [None, truncated_backprop_length, n_inputs])
+        x = tf.placeholder(tf.float32, [batch_size, truncated_backprop_length])
+        y = tf.placeholder(tf.int32, [batch_size, truncated_backprop_length])
         init_state = tf.placeholder(tf.float32, [batch_size, state_size])
         
         
@@ -110,7 +111,7 @@ class Launcher:
         states_series = []
         for current_input in inputs_series:
             current_input = tf.reshape(current_input, [batch_size, 1])
-            input_and_state_concatenated = tf.concat(1, [current_input, current_state]) # Increasing number of columns
+            input_and_state_concatenated = tf.concat([current_input, current_state], 1) # Increasing number of columns
             next_state = tf.tanh(tf.matmul(input_and_state_concatenated, W) + b) # Broadcasted addition
             states_series.append(next_state)
             current_state = next_state
@@ -130,7 +131,7 @@ class Launcher:
 	###    	fonction de perte          ###
 	######################################
 
-        losses = [tf.nn.sparse_softmax_cross_entropy_with_logits(logits, labels) for logits, labels in zip(logits_series,labels_series)]
+        losses = [tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels) for logits, labels in zip(logits_series,labels_series)]
         total_loss = tf.reduce_mean(losses)
 
 
@@ -184,8 +185,8 @@ class Launcher:
             plt.show()
             loss_list = []
             
-            for epoch_idx in tqdm(range(num_epochs)):
-                x,y = generate_songs()
+            for epoch_idx in range(num_epochs):
+                x,y = generate_songs(songs)
                 _current_state = np.zeros((batch_size, state_size))
                 
                 print("New song, epoch :", epoch_idx)

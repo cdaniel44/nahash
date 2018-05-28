@@ -62,6 +62,11 @@ class Launcher:
         state_size = 4
         num_classes = 2
         songs = import_midi.get_songs("../tmp/")
+        songs = np.array(songs)
+        songs = np.squeeze(songs, axis=0)
+        print(songs.shape)
+        print(songs)
+        #print(sum(len(x) for x in songs)) 257,156
         num_batches = len(songs) // batch_size
         learning_rate = tf.constant(0.005, tf.float32)  # The learning rate of our model
         
@@ -74,9 +79,7 @@ class Launcher:
             for x in songs:
                 
                 x = np.array(x)
-                print(x)
-                y = np.roll(x, 3)
-                y[0:3] = 0
+                y = np.array(y)
             
             x = x.reshape((batch_size, -1))
             y = y.reshape((batch_size, -1))
@@ -91,10 +94,13 @@ class Launcher:
 
         
         #placeholder that holds data inputs 
-        x = tf.placeholder(tf.float32, [batch_size, truncated_backprop_length])
-        y = tf.placeholder(tf.int32, [batch_size, truncated_backprop_length])
-        init_state = tf.placeholder(tf.float32, [batch_size, state_size])
-        
+        #x = tf.placeholder(tf.float32, [batch_size, truncated_backprop_length])
+        x = tf.placeholder(tf.float32, [None,None])
+        #y = tf.placeholder(tf.int32, [batch_size, truncated_backprop_length])
+        y = tf.placeholder(tf.int32, [None, None])
+        #init_state = tf.placeholder(tf.float32, [batch_size, state_size])
+        init_state = tf.placeholder(tf.float32, [None, None])
+        seqlen = tf.placeholder
         
         W = tf.Variable(np.random.rand(state_size+1, state_size), dtype=tf.float32)
         b = tf.Variable(np.zeros((1,state_size)), dtype=tf.float32)
@@ -102,13 +108,13 @@ class Launcher:
         W2 = tf.Variable(np.random.rand(state_size, num_classes),dtype=tf.float32)
         b2 = tf.Variable(np.zeros((1,num_classes)), dtype=tf.float32)
         
-        inputs_series = tf.unstack(x, axis=1)
-        labels_series = tf.unstack(y, axis=1)
+        #inputs_series = tf.unstack(x, axis=1)
+        #labels_series = tf.unstack(y, axis=1)
         
         #build RNN that does the actual RNN computation
         
         cell = tf.contrib.rnn.BasicRNNCell(state_size)
-        states_series, current_state = tf.nn.dynamic_rnn(cell, inputs_series, init_state)
+        states_series, current_state = tf.nn.dynamic_rnn(cell, x, init_state)
             
         logits_series = [tf.matmul(state, W2) + b2 for state in states_series] #Broadcasted addition
         predictions_series = [tf.nn.softmax(logits) for logits in logits_series]
@@ -184,12 +190,10 @@ class Launcher:
                 _current_state = np.zeros((batch_size, state_size))
                 
                 print("New song, epoch :", epoch_idx)
-                for batch_idx in range(num_batches):
-                    start_idx = batch_idx * truncated_backprop_length
-                    end_idx = start_idx + truncated_backprop_length
+                for note in range(songs):
                     
-                    batchX = x[:,start_idx:end_idx]
-                    batchY = y[:,start_idx:end_idx]
+                    batchX = x
+                    batchY = y
                     
                     _total_loss, _train_step, _current_state, _predictions_series = sess.run(
                 [total_loss, train_step, current_state, predictions_series],

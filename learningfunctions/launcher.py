@@ -37,16 +37,15 @@ class Launcher:
         print('Init')
         #init Self params
 
-
     def launch():
         #TODO All the entry point
-        
+
 
 
     ######################################
 	###    Hypermarameters             ###
 	######################################
-	
+
         lowest_note = import_midi.lowerBound  # the index of the lowest note on the piano roll
         highest_note = import_midi.upperBound  # the index of the highest note on the piano roll
         note_range = highest_note - lowest_note  # the note range
@@ -61,65 +60,57 @@ class Launcher:
         batch_size = 10  # The number of training examples that we are going to send through the RNN at a time.
         state_size = 4
         num_classes = 2
-        songs = import_midi.get_songs("../tmp/")
+        songs = import_midi.get_songs("../musics/")
         songs = np.array(songs)
-        songs = np.squeeze(songs, axis=0)
+        #songs = np.squeeze(songs, axis=0)
         print(songs.shape)
-        print(songs)
+        #print(songs)
         #print(sum(len(x) for x in songs)) 257,156
         num_batches = len(songs) // batch_size
         learning_rate = tf.constant(0.005, tf.float32)  # The learning rate of our model
-        
-        
+
+
     ######################################
 	###          songs                 ###
 	######################################
         def generate_songs(music):
 
             for x in songs:
-                
                 x = np.array(x)
-                y = np.array(y)
-            
-            x = x.reshape((batch_size, -1))
-            y = y.reshape((batch_size, -1))
-            
-            return (x, y)
-        
-        
+
+            return (x)
+
+
     ######################################
 	###    	variables                  ###
 	######################################
-        
 
-        
-        #placeholder that holds data inputs 
+        #placeholder that holds data inputs
         #x = tf.placeholder(tf.float32, [batch_size, truncated_backprop_length])
-        x = tf.placeholder(tf.float32, [None,None])
+        x = tf.placeholder(tf.float32, [None, num_steps, n_inputs])
         #y = tf.placeholder(tf.int32, [batch_size, truncated_backprop_length])
-        y = tf.placeholder(tf.int32, [None, None])
+        y = tf.placeholder(tf.int32, [None])
         #init_state = tf.placeholder(tf.float32, [batch_size, state_size])
-        init_state = tf.placeholder(tf.float32, [None, None])
+        #init_state = tf.placeholder(tf.float32, [None])
         seqlen = tf.placeholder
-        
+
         W = tf.Variable(np.random.rand(state_size+1, state_size), dtype=tf.float32)
         b = tf.Variable(np.zeros((1,state_size)), dtype=tf.float32)
 
         W2 = tf.Variable(np.random.rand(state_size, num_classes),dtype=tf.float32)
         b2 = tf.Variable(np.zeros((1,num_classes)), dtype=tf.float32)
-        
+
         #inputs_series = tf.unstack(x, axis=1)
         #labels_series = tf.unstack(y, axis=1)
-        
+
         #build RNN that does the actual RNN computation
-        
-        cell = tf.contrib.rnn.BasicRNNCell(state_size)
-        states_series, current_state = tf.nn.dynamic_rnn(cell, x, init_state)
-            
-        logits_series = [tf.matmul(state, W2) + b2 for state in states_series] #Broadcasted addition
-        predictions_series = [tf.nn.softmax(logits) for logits in logits_series]
-        
-        
+
+        cell = tf.contrib.rnn.BasicRNNCell(num_units=state_size)
+        states_series, current_state = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32)
+
+        logits_series = tf.layers.dense(states_series, num_outputs)
+
+
 	######################################
 	###    	fonction de creation	   ###
 	###     des couches de neuronnes   ###
@@ -131,28 +122,29 @@ class Launcher:
 	###    	fonction de perte          ###
 	######################################
 
-        losses = [tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels) for logits, labels in zip(logits_series,labels_series)]
+        losses = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits_series)
         total_loss = tf.reduce_mean(losses)
 
 
-        
+
 	###########################################
 	###   fonction d optimisation           ###
 	###########################################
-	
-        #train_step = tf.train.AdagradOptimizer(0.3).minimize(total_loss)
+
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+        train_step = optimizer.minimize(total_loss)
 
 
 	###########################################
 	###   fonction de descente de gradient  ###
 	###########################################
-	
-	
+
+
 	##############################################
 	### fonction de visualisation du training  ###
 	##############################################
-	
-        
+
+
         def plot(loss_list, predictions_series, batchX, batchY):
             plt.subplot(2, 3, 1)
             plt.cla()
@@ -176,7 +168,7 @@ class Launcher:
 	######################################
 	###    	        Run                ###
 	######################################
-	
+
 
         with tf.Session() as sess:
             sess.run(tf.initialize_all_variables())
@@ -184,47 +176,39 @@ class Launcher:
             plt.figure()
             plt.show()
             loss_list = []
-            
+            updt = [total_loss, train_step, current_state, predictions_series]
+
             for epoch_idx in range(num_epochs):
-                x,y = generate_songs(songs)
+                #x, y = generate_songs(songs)
                 _current_state = np.zeros((batch_size, state_size))
-                
+
                 print("New song, epoch :", epoch_idx)
-                for note in range(songs):
-                    
-                    batchX = x
-                    batchY = y
-                    
+                print(len(songs))
+                for song in songs:
+                    song = np.array(song)
+                    song = song[:int(np.floor(song.shape[0] // num_steps) * num_steps)]
+                    song = np.reshape(song, [song.shape[0] // num_steps, song.shape[1] * num_steps])
+                    # Train the RBM on batch_size examples at a time
+                    for i in range(1, len(song), batch_size):
+                        tr_x = song[i:i + batch_size]
+                        print(x)
+                        print(tr_x)
+                        _total_loss, _train_step, _current_state, _predictions_series = sess.run(updt, feed_dict={ x: tr_x })
+
+                    '''
+                    print(note)
                     _total_loss, _train_step, _current_state, _predictions_series = sess.run(
                 [total_loss, train_step, current_state, predictions_series],
-                feed_dict={
-                    batchX_placeholder:batchX,
-                    batchY_placeholder:batchY,
-                    init_state:_current_state
-                })
-                
+                feed_dict={ x: note })
+                    '''
                     loss_list.append(_total_loss)
-                    
-                    if batch_idx%100 == 0:
-                        print("Step",batch_idx, "Loss", _total_loss)
+
+                    if note%100 == 0:
+                        print("Step",note, "Loss", _total_loss)
                         plot(loss_list, _predictions_series, batchX, batchY)
         plt.ioff()
         plt.show()
 
-    
+
     if __name__ == "__main__":
         launch()
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-    

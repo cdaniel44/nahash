@@ -107,14 +107,8 @@ class Launcher:
         
         #build RNN that does the actual RNN computation
         
-        current_state = init_state
-        states_series = []
-        for current_input in inputs_series:
-            current_input = tf.reshape(current_input, [batch_size, 1])
-            input_and_state_concatenated = tf.concat([current_input, current_state], 1) # Increasing number of columns
-            next_state = tf.tanh(tf.matmul(input_and_state_concatenated, W) + b) # Broadcasted addition
-            states_series.append(next_state)
-            current_state = next_state
+        cell = tf.contrib.rnn.BasicRNNCell(state_size)
+        states_series, current_state = tf.nn.dynamic_rnn(cell, inputs_series, init_state)
             
         logits_series = [tf.matmul(state, W2) + b2 for state in states_series] #Broadcasted addition
         predictions_series = [tf.nn.softmax(logits) for logits in logits_series]

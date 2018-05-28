@@ -1,15 +1,11 @@
 ################################################
 ###    	fonction convertion midi to matrix   ###
 ################################################
-import midi_manipulation
 import midi
 import numpy as np
 import glob
 from tqdm import tqdm
 
-lowest_note = midi_manipulation.lowerBound
-highest_note = midi_manipulation.upperBound
-note_range = highest_note-lowest_note
 path = "../tmp"
 
 lowerBound = 24
@@ -23,8 +19,8 @@ def get_songs(path):
 		songs.append(midiToNoteStateMatrix(f))
 	print(len(songs))
 	return songs
-		
-		
+
+
 def midiToNoteStateMatrix(midifile, squash=True, span=span):
     pattern = midi.read_midifile(midifile)
 
